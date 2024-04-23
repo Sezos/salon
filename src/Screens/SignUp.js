@@ -9,6 +9,7 @@ const saltRounds = 10;
 function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
 
   const submit = async (e) => {
@@ -32,6 +33,7 @@ function SignUp() {
     await addDoc(collection(firestore, "user"), {
       name: name,
       email: email.toLowerCase(),
+      phone: phone,
       password: hashPassword,
       type: "user",
     });
@@ -57,6 +59,14 @@ function SignUp() {
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
+          }}
+        />
+        <Input
+          type="phone"
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) => {
+            setPhone(e.target.value);
           }}
         />
         <Input

@@ -1,4 +1,12 @@
-import { addDoc, collection, deleteDoc, getDocs } from "@firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+} from "@firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
   OffcanvasBody,
@@ -22,7 +30,6 @@ import {
   ref as StorageRef,
   getDownloadURL,
 } from "firebase/storage";
-import { doc } from "firebase/firestore";
 import toast from "react-hot-toast";
 
 function SalonHome() {
@@ -35,16 +42,25 @@ function SalonHome() {
   const toggleModal = () => setIsModalOpen(!isModalOpen);
   const toggleSure = () => setSureModal(!sureModal);
 
-  const kk = ["Sormuus", "Manicure", "Vaks", "Sanal Huselt"];
-  const fb = ["sormuus", "manicure", "vaks", "sanal"];
+  const kk = ["Sormuus", "Manicure", "Vaks", "Sanal Huselt", "Context"];
+  const fb = ["sormuus", "manicure", "vaks", "sanal", "context"];
 
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({});
   const [image, setImage] = useState({});
   const [deleting, setDeleting] = useState("");
+  const [context, setContext] = useState({});
+  const [zurag1, setZurag1] = useState();
+  const [zurag2, setZurag2] = useState();
+  const [zurag3, setZurag3] = useState();
 
   useEffect(() => {
     tatah(fb[selected]);
+    (async () => {
+      setContext(
+        (await getDoc(doc(firestore, "context", "bfA66ACfQvzIwEKGy7tp"))).data()
+      );
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
@@ -111,12 +127,34 @@ function SalonHome() {
     { time: "19:00", id: 19 },
     { time: "20:00", id: 20 },
   ];
-  // if (selected === 3)
-  //   return (
-  //     <div>
 
-  //     </div>
-  //   );
+  const uploadContext = async () => {
+    let sth = context;
+    if (zurag1) {
+      const id = randomId();
+      const reff = StorageRef(storage, `context/${id}`);
+      await uploadBytes(reff, zurag1);
+      sth = { ...context, sormuus: await getDownloadURL(reff) };
+    }
+
+    if (zurag2) {
+      const id1 = randomId();
+      const reff1 = StorageRef(storage, `context/${id1}`);
+      await uploadBytes(reff1, zurag2);
+      sth = { ...context, manicure: await getDownloadURL(reff1) };
+    }
+
+    if (zurag3) {
+      const id2 = randomId();
+      const reff2 = StorageRef(storage, `context/${id2}`);
+      await uploadBytes(reff2, zurag3);
+      sth = { ...context, vaks: await getDownloadURL(reff2) };
+    }
+
+    setDoc(doc(firestore, "context", "bfA66ACfQvzIwEKGy7tp"), sth);
+
+    toast("Амжилттай Солилоо");
+  };
 
   return (
     <div>
@@ -124,13 +162,48 @@ function SalonHome() {
         <Button color="primary" onClick={toggle} className="ml-5">
           Цэс нээх
         </Button>
-        {selected !== 3 && (
+        {selected !== 3 && selected !== 4 && (
           <Button color="primary" onClick={toggleModal} className="mr-5">
             Нэмэх
           </Button>
         )}
       </div>
-      {selected === 3 ? (
+      {selected === 4 ? (
+        <div className="min-h-[500px] flex items-center flex-col">
+          {kk[selected]}
+          <div>
+            Sormuus
+            <Input
+              type="file"
+              onChange={(e) => {
+                setZurag1(e.target.files[0]);
+              }}
+              className="mb-2"
+            ></Input>
+          </div>
+          <div>
+            Manicure
+            <Input
+              type="file"
+              onChange={(e) => {
+                setZurag2(e.target.files[0]);
+              }}
+              className="mb-2"
+            ></Input>
+          </div>
+          <div>
+            Vaks
+            <Input
+              type="file"
+              onChange={(e) => {
+                setZurag3(e.target.files[0]);
+              }}
+              className="mb-2"
+            ></Input>
+          </div>
+          <Button onClick={uploadContext}>Хадгалах</Button>
+        </div>
+      ) : selected === 3 ? (
         <div className="min-h-[500px] flex items-center flex-col">
           {kk[selected]}
           <Table>
@@ -180,6 +253,7 @@ function SalonHome() {
                   <th>price</th>
                   <th>Start Time</th>
                   <th>End Time</th>
+                  <th>Edit</th>
                   <th>Delete</th>
                 </tr>
               </thead>
@@ -201,7 +275,9 @@ function SalonHome() {
                         <td>₮{product.price}</td>
                         <td>{product.startTime}</td>
                         <td>{product.endTime}</td>
-
+                        <td>
+                          <Button color="secondary">Edit</Button>
+                        </td>
                         <td>
                           <Button
                             color="danger"
@@ -360,6 +436,15 @@ function SalonHome() {
                 }}
               >
                 Sanal Huselt
+              </Button>
+              <Button
+                className="bg-slate-100 text-black border-none"
+                onClick={() => {
+                  setSelected(4);
+                  toggle();
+                }}
+              >
+                Context
               </Button>
             </div>
           </OffcanvasBody>
