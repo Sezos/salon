@@ -28,7 +28,7 @@ function Manicure() {
     <div>
       <Photo image={tomImage} />
       <div className="flex items-center justify-center">
-        <div className="grid grid-cols-4 justify-center">
+        <div className="grid grid-cols-4 justify-center  mx-20">
           {products.map((product) => {
             return (
               <div

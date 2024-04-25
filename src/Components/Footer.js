@@ -44,8 +44,8 @@ function Footer() {
         <img src={twitter} alt="facebook" />
       </div>
       <div className="flex flex-row space-x-20">
-        <div>Холбоо барих</div>
-        <div>Салбар газрууд</div>
+        <div>Холбоо барих: 94386833</div>
+        <div>Хаяг: Хорооллын эцэсийн e-Mart, 4 давхарт</div>
       </div>
     </div>
   );
