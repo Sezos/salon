@@ -5,7 +5,10 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   setDoc,
+  updateDoc,
+  where,
 } from "@firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -31,7 +34,7 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import toast from "react-hot-toast";
-
+import Select from "react-select";
 function SalonHome() {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,8 +45,8 @@ function SalonHome() {
   const toggleModal = () => setIsModalOpen(!isModalOpen);
   const toggleSure = () => setSureModal(!sureModal);
 
-  const kk = ["Sormuus", "Manicure", "Vaks", "Sanal Huselt", "Context"];
-  const fb = ["sormuus", "manicure", "vaks", "sanal", "context"];
+  const kk = ["Sormuus", "Manicure", "Vaks", "Sanal Huselt", "Context", "User"];
+  const fb = ["sormuus", "manicure", "vaks", "sanal", "context", "user"];
 
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({});
@@ -53,6 +56,7 @@ function SalonHome() {
   const [zurag1, setZurag1] = useState();
   const [zurag2, setZurag2] = useState();
   const [zurag3, setZurag3] = useState();
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
     tatah(fb[selected]);
@@ -60,6 +64,16 @@ function SalonHome() {
       setContext(
         (await getDoc(doc(firestore, "context", "bfA66ACfQvzIwEKGy7tp"))).data()
       );
+    })();
+    (async () => {
+      const st = [];
+      const docs = await getDocs(
+        query(collection(firestore, "user"), where("type", "==", "worker"))
+      );
+      docs.forEach((doc) => {
+        st.push({ ...doc.data(), label: doc.data().name, value: doc.id });
+      });
+      setEmployees(st);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
@@ -88,12 +102,8 @@ function SalonHome() {
 
   const nemeh = async () => {
     console.log(data);
-    if (
-      data.startTime === undefined ||
-      data.endTime === undefined ||
-      parseInt(data.startTime) > parseInt(data.endTime)
-    ) {
-      toast("Цагаа зөв оруулна уу.");
+    if (data.employee === undefined || data.employee.length === 0) {
+      toast("Ажилтнаа оруулна уу.");
       return;
     }
     const id = randomId();
@@ -111,22 +121,6 @@ function SalonHome() {
       toggleModal();
     }
   };
-
-  const hours = [
-    { time: "Select Time", id: undefined },
-    { time: "09:00", id: 9 },
-    { time: "10:00", id: 10 },
-    { time: "11:00", id: 11 },
-    { time: "12:00", id: 12 },
-    { time: "13:00", id: 13 },
-    { time: "14:00", id: 14 },
-    { time: "15:00", id: 15 },
-    { time: "16:00", id: 16 },
-    { time: "17:00", id: 17 },
-    { time: "18:00", id: 18 },
-    { time: "19:00", id: 19 },
-    { time: "20:00", id: 20 },
-  ];
 
   const uploadContext = async () => {
     let sth = context;
@@ -168,7 +162,14 @@ function SalonHome() {
           </Button>
         )}
       </div>
-      {selected === 4 ? (
+      {selected === 5 ? (
+        <UserKeke
+          datas={products}
+          update={async () => {
+            await tatah(fb[5]);
+          }}
+        />
+      ) : selected === 4 ? (
         <div className="min-h-[500px] flex items-center flex-col">
           {kk[selected]}
           <div>
@@ -251,8 +252,6 @@ function SalonHome() {
                   <th>Name</th>
                   <th>Description</th>
                   <th>price</th>
-                  <th>Start Time</th>
-                  <th>End Time</th>
                   <th>Edit</th>
                   <th>Delete</th>
                 </tr>
@@ -273,8 +272,6 @@ function SalonHome() {
                         <td>{product.name}</td>
                         <td>{product.description}</td>
                         <td>₮{product.price}</td>
-                        <td>{product.startTime}</td>
-                        <td>{product.endTime}</td>
                         <td>
                           <Button color="secondary">Edit</Button>
                         </td>
@@ -338,38 +335,16 @@ function SalonHome() {
                 }}
                 className="mb-2"
               ></Input>
-              <InputGroup className="mb-2">
-                <InputGroupText>Эхлэх цаг</InputGroupText>
-                <Input
-                  type="select"
-                  value={data.startTime}
-                  onChange={(e) => {
-                    setData({ ...data, startTime: e.target.value });
-                  }}
-                >
-                  {hours.map((hour) => (
-                    <option key={hour.id} value={hour.id}>
-                      {hour.time}
-                    </option>
-                  ))}
-                </Input>
-              </InputGroup>
-              <InputGroup className="mb-5">
-                <InputGroupText>дуусах цаг</InputGroupText>
-                <Input
-                  type="select"
-                  value={data.endTime}
-                  onChange={(e) => {
-                    setData({ ...data, endTime: e.target.value });
-                  }}
-                >
-                  {hours.map((hour) => (
-                    <option key={hour.id} value={hour.id}>
-                      {hour.time}
-                    </option>
-                  ))}
-                </Input>
-              </InputGroup>
+              <Select
+                isMulti
+                name="Ажилтнаа сонгох"
+                options={employees}
+                className="basic-multi-select mb-2"
+                classNamePrefix="select"
+                onChange={(e) => {
+                  setData({ ...data, employee: e });
+                }}
+              />
               <Button onClick={nemeh}>Хадгалах</Button>
             </Form>
           </ModalBody>
@@ -446,6 +421,15 @@ function SalonHome() {
               >
                 Context
               </Button>
+              <Button
+                className="bg-slate-100 text-black border-none"
+                onClick={() => {
+                  setSelected(5);
+                  toggle();
+                }}
+              >
+                User
+              </Button>
             </div>
           </OffcanvasBody>
         </Offcanvas>
@@ -453,5 +437,154 @@ function SalonHome() {
     </div>
   );
 }
-
+function UserKeke({ datas, update }) {
+  const [times, setTimes] = useState({ startTime: null, endTime: null });
+  const selections = [
+    { time: "Select Time", id: undefined },
+    { time: "09:00", id: 9 },
+    { time: "10:00", id: 10 },
+    { time: "11:00", id: 11 },
+    { time: "12:00", id: 12 },
+    { time: "13:00", id: 13 },
+    { time: "14:00", id: 14 },
+    { time: "15:00", id: 15 },
+    { time: "16:00", id: 16 },
+    { time: "17:00", id: 17 },
+    { time: "18:00", id: 18 },
+    { time: "19:00", id: 19 },
+    { time: "20:00", id: 20 },
+  ];
+  const [selected, setSelected] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => setIsOpen(!isOpen);
+  return (
+    <div className="flex items-center flex-col min-h-96">
+      <div>Users</div>
+      <div>
+        <Table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Нэр</th>
+              <th>email</th>
+              <th>position</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Change Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {datas.map((data, idx) => {
+              return (
+                <tr>
+                  <td>{idx + 1}</td>
+                  <td>{data.name}</td>
+                  <td>{data.email}</td>
+                  <td>{data.type}</td>
+                  <td
+                    onClick={() => {
+                      setSelected(idx);
+                      toggle();
+                    }}
+                  >
+                    {data.startTime}
+                  </td>
+                  <td
+                    onClick={() => {
+                      setSelected(idx);
+                      toggle();
+                    }}
+                  >
+                    {data.endTime}
+                  </td>
+                  <td>
+                    {data.type !== "Manager" && (
+                      <Button
+                        onClick={async () => {
+                          await updateDoc(doc(firestore, "user", data.id), {
+                            type: data.type === "user" ? "worker" : "user",
+                          });
+                          await update();
+                        }}
+                      >
+                        {data.type === "user"
+                          ? "Ажилтан болгох"
+                          : "Хэрэглэгч болгох"}
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      </div>
+      <Modal isOpen={isOpen} toggle={toggle}>
+        <ModalHeader toggle={toggle}>
+          {datas[selected].name} цаг солих
+        </ModalHeader>
+        <ModalBody>
+          <InputGroup>
+            <InputGroupText>Эхлэх цаг</InputGroupText>
+            <Input
+              type="select"
+              value={times.startTime}
+              onChange={(e) => {
+                console.log(e.target.value, times.endTime);
+                setTimes({
+                  ...times,
+                  startTime: e.target.value,
+                });
+              }}
+            >
+              {selections.map((hour) => (
+                <option key={hour.id} value={hour.id}>
+                  {hour.time}
+                </option>
+              ))}
+            </Input>
+          </InputGroup>
+          <InputGroup className="mt-2">
+            <InputGroupText>Дуусах цаг</InputGroupText>
+            <Input
+              type="select"
+              value={times.endTime}
+              onChange={(e) => {
+                setTimes({ ...times, endTime: e.target.value });
+              }}
+            >
+              {selections.map((hour) => (
+                <option key={hour.id} value={hour.id}>
+                  {hour.time}
+                </option>
+              ))}
+            </Input>
+          </InputGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            color="primary"
+            onClick={async () => {
+              if (times.startTime === null || times.endTime === null) {
+                toast("Цагаа зөв сонгоно уу.");
+                return;
+              }
+              await updateDoc(
+                doc(collection(firestore, "user"), datas[selected].id),
+                times
+              );
+              await update();
+              toggle();
+            }}
+          >
+            Хадгалах
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Үгүй
+          </Button>
+        </ModalFooter>
+      </Modal>
+    </div>
+  );
+}
 export default SalonHome;

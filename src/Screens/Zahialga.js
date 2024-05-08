@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where } from "@firebase/firestore";
+import { collection, getDoc, getDocs, query, where } from "@firebase/firestore";
 import { useEffect, useState } from "react";
 import { Button, Form, FormGroup, Input, Label } from "reactstrap";
 import firestore from "../firebase";
@@ -18,10 +18,25 @@ function Zahialga() {
     const currentUser = localStorage.getItem("currentUser");
     const st = [];
     let docs;
+    let user = [];
+    const userQ = await getDocs(
+      query(collection(firestore, "user"), where("email", "==", currentUser))
+    );
+    userQ.forEach((u) => {
+      user.push({ ...u.data(), id: u.id });
+    });
+    user = user[0];
     if (buhZahialguud) {
       docs =
-        currentUser === "salon@dagina.mn"
+        user.type === "Manager"
           ? await getDocs(collection(firestore, "zahialga"))
+          : user.type === "worker"
+          ? await getDocs(
+              query(
+                collection(firestore, "zahialga"),
+                where("worker", "==", user.id)
+              )
+            )
           : await getDocs(
               query(
                 collection(firestore, "zahialga"),
@@ -31,11 +46,19 @@ function Zahialga() {
     } else {
       if (date) {
         docs =
-          currentUser === "salon@dagina.mn"
+          user.type === "Manager"
             ? await getDocs(
                 query(
                   collection(firestore, "zahialga"),
                   where("udur", "==", `${date}`)
+                )
+              )
+            : user.type === "worker"
+            ? await getDocs(
+                query(
+                  collection(firestore, "zahialga"),
+                  where("udur", "==", `${date}`),
+                  where("worker", "==", user.id)
                 )
               )
             : await getDocs(
@@ -103,6 +126,7 @@ function Zahialga() {
                 <div>
                   <div className="flex">₮{product.price}</div>
                   <div>{product.user}</div>
+                  {/* <div>{product.worker}</div> */}
                 </div>
               </div>
             </div>

@@ -36,11 +36,11 @@ function Sormuus() {
         </Input>
       </div> */}
       <div className="flex items-center justify-center">
-        <div className="grid grid-cols-4 justify-center mx-20">
+        <div className="grid grid-cols-4 justify-center mx-40">
           {products.map((product) => {
             return (
               <div
-                className="w-5/6 m-3 flex flex-col justify-start items-center"
+                className="w-2/3 m-3 flex flex-col justify-start items-center"
                 onClick={() => {
                   if (!localStorage.getItem("currentUser"))
                     window.location.replace("/login");

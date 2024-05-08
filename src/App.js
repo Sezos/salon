@@ -14,7 +14,7 @@ import Home from "./Screens/HomeScreen";
 import { useContext, useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import { ProviderContext } from "./provider";
-import { Button, Input, Modal, ModalBody } from "reactstrap";
+import { Button, Input, List, Modal, ModalBody } from "reactstrap";
 import firestore from "./firebase";
 import { addDoc, collection, getDocs, query, where } from "@firebase/firestore";
 import SalonHome from "./Screens/SalonHome";
@@ -115,7 +115,7 @@ function App() {
   const toggle = () => provider.setCal(!provider.cal);
   const user = localStorage.getItem("currentUser");
   const [availableTimes, setAvailableTimes] = useState([]);
-  // const []
+  const [selectedEmployee, setSelectedEmployee] = useState([]);
 
   const submit = async () => {
     await addDoc(collection(firestore, "zahialga"), {
@@ -124,6 +124,7 @@ function App() {
       price: provider.product.price,
       image: provider.product.image,
       tsag: provider.tsag,
+      worker: selectedEmployee,
       udur: moment().format("YYYY-MM-DD"),
       user: user,
     });
@@ -137,30 +138,44 @@ function App() {
       const sth = await getDocs(
         query(
           collection(firestore, "zahialga"),
-          where("udur", "==", moment().format("YYYY-MM-DD"))
+          where("udur", "==", moment().format("YYYY-MM-DD")),
+          where("worker", "==", selectedEmployee)
         )
       );
-
+      // console.log("sth", sth);
       const occupiedTimes = [];
+
       sth.forEach((result) => {
         occupiedTimes.push(result.data().tsag);
       });
+      console.log(occupiedTimes);
+      const emplNum = provider.product.employee?.findIndex(
+        (e) => e.value === selectedEmployee
+      );
+      console.log(selectedEmployee, emplNum);
 
-      const time = times
-        .map((time) => {
-          return parseInt(provider.product.startTime) <=
-            parseInt(time.slice(0, 2)) &&
-            parseInt(time.slice(0, 2)) <= parseInt(provider.product.endTime)
-            ? time
-            : null;
-        })
-        .filter((time) => time !== null)
-        .filter((time) => !occupiedTimes.includes(time));
+      const time =
+        emplNum === -1 || emplNum === undefined
+          ? []
+          : times
+              .map((time) => {
+                return parseInt(provider.product.employee[emplNum].startTime) <=
+                  parseInt(time.slice(0, 2)) &&
+                  parseInt(time.slice(0, 2)) <=
+                    parseInt(provider.product.employee[emplNum].endTime)
+                  ? time
+                  : null;
+              })
+              .filter((time) => time !== null)
+              .filter((time) => !occupiedTimes.includes(time));
 
       setAvailableTimes(time);
     })();
-  }, [provider.calval, setAvailableTimes, provider.product]);
+  }, [selectedEmployee, provider.calval, provider.product]);
 
+  // useEffect(() => {
+  //   provider.product.employee.map((e) => {});
+  // }, [provider.calval, provider.product]);
   return (
     <div>
       <Header />
@@ -174,36 +189,55 @@ function App() {
             minDate={new Date()}
           />
 
-          <div className="flex justify-between">
-            <Input
-              type="select"
-              onChange={(e) => {
-                console.log(e.target.value);
-                provider.setTsag(e.target.value);
-              }}
-            >
-              <option key={null} value={0}>
-                Select a Time
-              </option>
-              {availableTimes &&
-                availableTimes.map((time) => {
-                  return (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  );
-                })}
-            </Input>
-            <div className="flex items-end pr-5">
-              <Button
-                className="p-0 px-2 h-10"
-                onClick={submit}
-                disabled={!provider.calval || provider.tsag === "0"}
-              >
-                Хадгалах
-              </Button>
-            </div>
-          </div>
+          <Input
+            type="select"
+            onChange={(e) => {
+              console.log(e.target.value);
+              setSelectedEmployee(e.target.value);
+            }}
+            className="mt-2"
+          >
+            <option key={null} value={0}>
+              Select a Worker
+            </option>
+            {provider.product?.employee &&
+              provider.product?.employee.map((employee) => {
+                return (
+                  <option key={employee.value} value={employee.value}>
+                    {employee.label}
+                  </option>
+                );
+              })}
+          </Input>
+          <Input
+            type="select"
+            className="mt-2 pr-2"
+            onChange={(e) => {
+              console.log(e.target.value);
+              provider.setTsag(e.target.value);
+            }}
+          >
+            <option key={null} value={0}>
+              Select a Time
+            </option>
+            {availableTimes &&
+              availableTimes.map((time) => {
+                return (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                );
+              })}
+          </Input>
+          <Button
+            className="p-0 px-2 mt-2 h-10"
+            onClick={submit}
+            disabled={
+              !selectedEmployee || !provider.calval || provider.tsag === "0"
+            }
+          >
+            Хадгалах
+          </Button>
         </ModalBody>
       </Modal>
     </div>
