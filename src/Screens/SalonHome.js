@@ -521,7 +521,7 @@ function UserKeke({ datas, update }) {
       </div>
       <Modal isOpen={isOpen} toggle={toggle}>
         <ModalHeader toggle={toggle}>
-          {datas[selected].name} цаг солих
+          {datas[selected]?.name} цаг солих
         </ModalHeader>
         <ModalBody>
           <InputGroup>
@@ -570,7 +570,7 @@ function UserKeke({ datas, update }) {
                 return;
               }
               await updateDoc(
-                doc(collection(firestore, "user"), datas[selected].id),
+                doc(collection(firestore, "user"), datas[selected]?.id),
                 times
               );
               await update();

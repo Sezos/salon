@@ -138,17 +138,29 @@ function App() {
       const sth = await getDocs(
         query(
           collection(firestore, "zahialga"),
-          where("udur", "==", moment().format("YYYY-MM-DD")),
+          where("udur", "==", moment(provider.calval).format("YYYY-MM-DD")),
           where("worker", "==", selectedEmployee)
         )
       );
-      // console.log("sth", sth);
+      const sth1 = await getDocs(
+        query(
+          collection(firestore, "zahialga"),
+          where("udur", "==", moment(provider.calval).format("YYYY-MM-DD")),
+          where("user", "==", localStorage.getItem("currentUser"))
+        )
+      );
+
       const occupiedTimes = [];
 
       sth.forEach((result) => {
         occupiedTimes.push(result.data().tsag);
       });
+      sth1.forEach((result) => {
+        occupiedTimes.push(result.data().tsag);
+      });
+
       console.log(occupiedTimes);
+
       const emplNum = provider.product.employee?.findIndex(
         (e) => e.value === selectedEmployee
       );
