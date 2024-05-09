@@ -125,7 +125,7 @@ function App() {
       image: provider.product.image,
       tsag: provider.tsag,
       worker: selectedEmployee,
-      udur: moment().format("YYYY-MM-DD"),
+      udur: moment(provider.calval).format("YYYY-MM-DD"),
       user: user,
     });
     toast("Та амжилттай Захиаллаа.");
