@@ -11,6 +11,7 @@ function SignUp() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [isWorker, setIsWorker] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -35,6 +36,7 @@ function SignUp() {
       email: email.toLowerCase(),
       phone: phone,
       password: hashPassword,
+      isWorker: isWorker,
       type: "user",
     });
     toast("Амжилттай бүртгүүллээ.");
@@ -77,6 +79,18 @@ function SignUp() {
             setPassword(e.target.value);
           }}
         />
+
+        <div className="flex gap-2">
+          <Input
+            type="switch"
+            value={password}
+            onChange={(e) => {
+              setIsWorker(!isWorker);
+            }}
+          />
+          <p className="text-sm">Ажилтан эсэх</p>
+        </div>
+
         <Button type="submit">Үүсгэх</Button>
         <Button
           onClick={() => {

@@ -80,7 +80,12 @@ function SalonHome() {
 
   const tatah = async (val) => {
     const st = [];
-    const docs = await getDocs(collection(firestore, val));
+    let docs;
+    if (selected === 5) {
+      docs = await getDocs(
+        query(collection(firestore, val), where("isWorker", "==", true))
+      );
+    } else docs = await getDocs(collection(firestore, val));
     docs.forEach((doc) => {
       st.push({ ...doc.data(), id: doc.id });
     });
@@ -156,7 +161,7 @@ function SalonHome() {
         <Button color="primary" onClick={toggle} className="ml-5">
           Цэс нээх
         </Button>
-        {selected !== 3 && selected !== 4 && (
+        {selected < 3 && (
           <Button color="primary" onClick={toggleModal} className="mr-5">
             Нэмэх
           </Button>
